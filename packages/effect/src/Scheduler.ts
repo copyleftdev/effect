@@ -264,6 +264,32 @@ export class ControlledScheduler implements Scheduler {
       }
     }
   }
+
+  /**
+   * Execute exactly one pending task (the first in highest-priority bucket).
+   * Returns `true` if a task was executed, `false` if no tasks were pending.
+   *
+   * Unlike `step()` which drains all pending tasks, `stepOne()` provides
+   * fine-grained control over execution order — essential for deterministic
+   * simulation testing.
+   *
+   * @since 3.22.0
+   */
+  stepOne(): boolean {
+    const buckets = this.tasks.buckets
+    for (let i = 0; i < buckets.length; i++) {
+      const [_, tasks] = buckets[i]!
+      if (tasks.length > 0) {
+        const task = tasks.shift()!
+        if (tasks.length === 0) {
+          buckets.splice(i, 1)
+        }
+        task()
+        return true
+      }
+    }
+    return false
+  }
 }
 
 /**
